@@ -1,0 +1,865 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lucky | Video Editor & Content Creator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script>
+  /* theme: always starts dark on every visit (choice is NOT remembered) */
+  document.documentElement.setAttribute('data-theme', 'dark');
+</script>
+<style>
+  :root{
+    --bg:#0a0a0a;
+    --panel:#1b1b1b;
+    --text:#f2f2f2;
+    --dim:#6b6b6b;
+    --line:rgba(255,255,255,.09);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);color:var(--text);
+    font-family:"Inter Tight",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;overflow-x:hidden;
+  }
+  section{scroll-margin-top:0}
+
+  /* ---------- Header ---------- */
+  header{
+    position:fixed;top:0;left:0;right:0;z-index:2000;
+    display:flex;justify-content:flex-end;align-items:center;gap:30px;
+    padding:22px clamp(20px,4vw,48px);
+    background:rgba(10,10,10,.6);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--line);
+  }
+  header a{font-size:14px;color:var(--dim);text-decoration:none;transition:color .2s}
+  header a:hover,header a.active{color:#fff}
+
+  /* ---------- Media placeholder slots ---------- */
+  .slot{
+    position:relative;overflow:hidden;cursor:default;
+    background:#141414;border:1px dashed rgba(255,255,255,.18);
+    display:grid;place-items:center;color:#7a7a7a;
+    transition:border-color .2s,background .2s;
+  }
+  .slot.editable{cursor:pointer}
+  .slot.editable:hover{border-color:rgba(255,255,255,.4);background:#191919}
+  .slot .media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border:0;display:block}
+  .slot.filled{border-color:transparent}
+  .ph{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:12px;font-size:13px;line-height:1.35}
+  .ph .plus{font-size:30px;line-height:1;color:#a0a0a0;font-weight:300}
+  .ph small{font-size:11px;color:#5d5d5d}
+
+  /* ---------- 1. Home ---------- */
+  #home{
+    min-height:100vh;
+    padding:110px clamp(20px,4vw,48px) 48px;
+    display:grid;grid-template-columns:1fr 1fr;gap:clamp(24px,4vw,56px);align-items:center;
+  }
+  .hero-text h1{
+    font-weight:500;line-height:1.04;letter-spacing:-.03em;
+    font-size:clamp(40px,5.4vw,82px);
+  }
+  .hero-text h1 .b{color:#fff}
+  .hero-text h1 .d{color:#5a5a5a}
+  .hero-text p{
+    margin-top:36px;max-width:430px;color:#6b6b6b;font-size:clamp(15px,1.25vw,17px);line-height:1.5;
+  }
+  .hero-img{
+    width:100%;aspect-ratio:1/1.02;max-height:calc(100vh - 150px);
+    border-radius:22px;justify-self:end;
+  }
+
+
+  /* ---------- Twinkling stars (dark theme only) ---------- */
+  .stars{
+    position:absolute;inset:0;width:100%;height:100%;
+    z-index:0;pointer-events:none;
+    opacity:0;transition:opacity .6s ease;
+  }
+  :root[data-theme="dark"] .stars{opacity:1}
+
+  /* ---------- 2. Work ---------- */
+  #work{padding:0 clamp(12px,2vw,24px) 40px}
+  .stage{
+    position:relative;width:100%;height:clamp(760px,100vh,980px);
+    background:#1b1b1b;border-radius:22px;overflow:hidden;
+    /* faint map-like texture */
+    background-image:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='900' height='700' viewBox='0 0 900 700' fill='none' stroke='white' stroke-opacity='.045' stroke-width='1.2'><path d='M20 120 C120 60 220 160 330 110 S520 40 640 120 790 90 890 150'/><path d='M0 300 C110 250 190 340 300 300 S470 230 590 310 780 280 900 340'/><path d='M40 520 C140 470 240 560 350 520 S540 450 660 530 800 500 880 560'/><path d='M180 0 C150 90 230 170 190 260 S120 420 200 520 150 640 190 700'/><path d='M470 0 C440 80 520 180 480 270 S430 420 500 520 450 640 480 700'/><path d='M740 0 C710 90 790 170 750 270 S700 420 770 520 720 640 750 700'/></svg>"),
+      radial-gradient(circle at 50% 50%,#212121 0,#1a1a1a 70%);
+    background-size:900px 700px,cover;
+  }
+  .big{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    z-index:500;text-align:center;pointer-events:none;
+    font-weight:900;text-transform:uppercase;letter-spacing:-.02em;line-height:.9;
+    font-size:clamp(44px,7.6vw,112px);
+    will-change:transform;
+  }
+  /* gradient lives on each line so every line can float on its own */
+  .big span{
+    display:block;will-change:transform;
+    background:linear-gradient(180deg,#ffffff 8%,#a0a0a0 100%);
+    background-size:100% 600%;
+    -webkit-background-clip:text;background-clip:text;
+    color:transparent;-webkit-text-fill-color:transparent;
+  }
+  .big span:nth-child(1){background-position:0 0}
+  .big span:nth-child(2){background-position:0 20%}
+  .big span:nth-child(3){background-position:0 40%}
+  .big span:nth-child(4){background-position:0 60%}
+  .big span:nth-child(5){background-position:0 80%}
+  .big span:nth-child(6){background-position:0 100%}
+  .reel{
+    position:absolute;left:50%;top:50%;aspect-ratio:9/16;
+    border-radius:14px;overflow:hidden;
+    box-shadow:0 22px 50px rgba(0,0,0,.55);
+    will-change:transform;background:#262626;
+  }
+  .reel .slot{position:absolute;inset:0;border-radius:inherit}
+  .reel::after{
+    content:"";position:absolute;left:0;right:0;bottom:0;height:42%;
+    background:linear-gradient(transparent,rgba(0,0,0,.72));pointer-events:none;z-index:2;
+  }
+  .reel-label{
+    position:absolute;left:11px;right:11px;bottom:10px;z-index:3;
+    font-size:11px;font-weight:400;color:#fff;pointer-events:none;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+
+  .sound-btn{
+    position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:1000;
+    display:flex;align-items:center;gap:9px;cursor:pointer;
+    padding:9px 16px;border-radius:999px;border:1px solid var(--line);
+    background:rgba(255,255,255,.08);color:#dcdcdc;font:inherit;font-size:13px;
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    transition:background .2s,color .2s;
+  }
+  .sound-btn:hover{background:rgba(255,255,255,.14);color:#fff}
+  .sound-btn i{width:8px;height:8px;border-radius:50%;background:#666;transition:background .2s}
+  .sound-btn.on i{background:#4ade80}
+
+  /* ---------- 3. Hire me ---------- */
+  #hire{
+    min-height:100vh;
+    padding:110px clamp(20px,4vw,56px) 80px;
+    display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);
+    gap:clamp(32px,6vw,90px);align-items:center;
+  }
+  .phone-wrap{display:flex;justify-content:center}
+  .phone{
+    position:relative;width:min(300px,78vw);aspect-ratio:300/620;
+    background:#000;border-radius:50px;padding:9px;
+    border:2px solid #3a3a3a;
+    box-shadow:0 0 0 5px #151515,0 40px 90px rgba(0,0,0,.7),inset 0 0 0 2px #111;
+  }
+  .island{
+    position:absolute;top:19px;left:50%;transform:translateX(-50%);
+    width:92px;height:27px;background:#000;border-radius:20px;z-index:5;
+  }
+  .screen{
+    height:100%;border-radius:41px;overflow:hidden;
+    background:linear-gradient(#171717,#0c0c0c);
+    padding:62px 20px 22px;
+    display:flex;flex-direction:column;align-items:center;text-align:center;gap:9px;
+  }
+  .avatar{width:104px;height:104px;border-radius:50%;flex:none}
+  .avatar .ph .plus{font-size:24px}
+  .avatar .ph{font-size:10.5px;padding:6px}
+  .screen{color:#f2f2f2}
+  .screen .name{font-size:22px;font-weight:600;letter-spacing:-.01em;margin-top:6px;color:#f2f2f2}
+  .screen .role{font-size:12.5px;color:#9a9a9a}
+  .screen .bio{font-size:12px;color:#7d7d7d;line-height:1.5;margin-top:2px}
+  .contacts{width:100%;display:flex;flex-direction:column;gap:7px;margin-top:auto}
+  .contacts a{
+    display:flex;justify-content:space-between;gap:10px;
+    padding:9px 12px;border:1px solid var(--line);border-radius:12px;
+    font-size:12px;color:#dcdcdc;text-decoration:none;background:rgba(255,255,255,.03);
+  }
+  .contacts a span:first-child{color:#777}
+  .hire-btn{
+    width:100%;margin-top:6px;padding:12px;border-radius:999px;
+    background:#fff;color:#000;font-weight:600;font-size:14px;text-decoration:none;
+  }
+
+  .info h2{
+    font-weight:500;line-height:1.05;letter-spacing:-.03em;
+    font-size:clamp(34px,4.2vw,62px);color:#fff;
+  }
+  .resume-btn{
+    display:inline-flex;align-items:center;gap:10px;margin-top:26px;
+    padding:13px 24px;border-radius:999px;border:1px solid rgba(255,255,255,.28);
+    color:#fff;text-decoration:none;font-size:15px;font-weight:500;
+    transition:background .2s,color .2s,border-color .2s;
+  }
+  .resume-btn:hover{background:#fff;color:#000;border-color:#fff}
+  .block{margin-top:38px}
+  .block h3{
+    font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--dim);font-weight:500;margin-bottom:12px;
+  }
+  .row{
+    display:flex;justify-content:space-between;align-items:baseline;gap:24px;
+    padding:15px 0;border-top:1px solid var(--line);
+  }
+  .row:last-of-type{border-bottom:1px solid var(--line)}
+  .row .l{color:#fff;font-size:17px}
+  .row .r{color:#9a9a9a;font-size:15px;text-align:right;white-space:nowrap}
+  .row.exp{display:grid;grid-template-columns:150px 1fr;align-items:start}
+  .row.exp .when{color:#7a7a7a;font-size:14px}
+  .row.exp .what{color:#fff;font-size:17px}
+  .row.exp .desc{color:#8a8a8a;font-size:14.5px;margin-top:4px;line-height:1.45}
+  .note{margin-top:12px;font-size:13.5px;color:#6b6b6b}
+  .tags{display:flex;flex-wrap:wrap;gap:9px}
+  .tag{border:1px solid var(--line);padding:8px 15px;border-radius:999px;font-size:14px;color:#cfcfcf}
+
+  footer{padding:30px;text-align:center;font-size:13px;color:#4d4d4d;border-top:1px solid var(--line)}
+
+  /* ---------- Theme toggle button ---------- */
+  .theme-btn{
+    display:flex;align-items:center;justify-content:center;
+    width:34px;height:34px;margin:-8px 0 -8px 0;border-radius:50%;
+    border:1px solid var(--line);background:transparent;color:var(--dim);cursor:pointer;
+    transition:color .2s,background .2s,border-color .2s;
+  }
+  .theme-btn:hover{color:var(--text);background:rgba(128,128,128,.14)}
+  .theme-btn svg{width:17px;height:17px;display:block}
+  .theme-btn .i-sun{display:none}
+  :root[data-theme="light"] .theme-btn .i-sun{display:block}
+  :root[data-theme="light"] .theme-btn .i-moon{display:none}
+  body,header,.stage,.tag,.row{transition:background-color .3s,color .3s,border-color .3s}
+
+  /* ---------- Light theme (off-white) ---------- */
+  :root[data-theme="light"]{
+    --bg:#f3f0e9;
+    --panel:#e8e4db;
+    --text:#161616;
+    --dim:#7b776e;
+    --line:rgba(0,0,0,.11);
+  }
+  [data-theme="light"] header{background:rgba(243,240,233,.72)}
+  [data-theme="light"] header a:hover,
+  [data-theme="light"] header a.active{color:#111}
+  [data-theme="light"] .slot{background:#e8e4db;border-color:rgba(0,0,0,.2);color:#7b776e}
+  [data-theme="light"] .slot.editable:hover{background:#e0dbd0;border-color:rgba(0,0,0,.4)}
+  [data-theme="light"] .ph .plus{color:#8a867d}
+  [data-theme="light"] .ph small{color:#9a968d}
+  [data-theme="light"] .hero-text h1 .b{color:#111}
+  [data-theme="light"] .hero-text h1 .d{color:#a5a198}
+  [data-theme="light"] .hero-text p{color:#7b776e}
+  [data-theme="light"] .stage{background-image:radial-gradient(circle at 50% 50%,#ece8df 0,#e2ded4 70%);background-color:#e5e1d7}
+  [data-theme="light"] .big span{background-image:linear-gradient(180deg,#111111 8%,#7a766d 100%)}
+  [data-theme="light"] .reel{box-shadow:0 18px 40px rgba(0,0,0,.28)}
+  [data-theme="light"] .sound-btn{background:rgba(0,0,0,.06);color:#333}
+  [data-theme="light"] .sound-btn:hover{background:rgba(0,0,0,.11);color:#000}
+  [data-theme="light"] .phone{box-shadow:0 0 0 5px #d6d2c8,0 40px 80px rgba(0,0,0,.28),inset 0 0 0 2px #111}
+  [data-theme="light"] .info h2{color:#111}
+  [data-theme="light"] .resume-btn{border-color:rgba(0,0,0,.3);color:#111}
+  [data-theme="light"] .resume-btn:hover{background:#111;color:#fff;border-color:#111}
+  [data-theme="light"] .row .l,
+  [data-theme="light"] .row.exp .what{color:#111}
+  [data-theme="light"] .row .r{color:#6f6b63}
+  [data-theme="light"] .row.exp .when{color:#7b776e}
+  [data-theme="light"] .row.exp .desc{color:#6f6b63}
+  [data-theme="light"] .note{color:#7b776e}
+  [data-theme="light"] .tag{color:#333}
+  [data-theme="light"] footer{color:#8a867d}
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:860px){
+    #home{grid-template-columns:1fr;padding-top:100px}
+    .hero-img{justify-self:stretch;max-height:none;aspect-ratio:1/1}
+    #hire{grid-template-columns:1fr}
+    .stage{height:clamp(700px,92vh,860px)}
+    .row.exp{grid-template-columns:1fr;gap:4px}
+    .row .r{white-space:normal}
+    header{gap:22px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav style="display:flex;gap:30px">
+    <a href="#home" data-sec="home">About</a>
+    <a href="#work" data-sec="work">Work</a>
+    <a href="#hire" data-sec="hire">Hire me</a>
+  </nav>
+  <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch theme" title="Switch theme">
+    <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+  </button>
+</header>
+
+<!-- 1. HOME -->
+<section id="home">
+  <div class="hero-text">
+    <h1 id="headline"></h1>
+    <p id="heroDesc"></p>
+  </div>
+  <div class="hero-img" id="heroImg"></div>
+</section>
+
+<!-- 2. WORK -->
+<section id="work">
+  <div class="stage" id="stage">
+    <h2 class="big">
+      <span>Work</span><span>That</span><span>Speaks</span><span>Louder</span><span>Than</span><span>Words</span>
+    </h2>
+    <button class="sound-btn" id="soundBtn" type="button"><i></i><span>Click to enable sound</span></button>
+  </div>
+</section>
+
+<!-- 3. HIRE ME -->
+<section id="hire">
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="island"></div>
+      <div class="screen">
+        <div class="avatar" id="avatar"></div>
+        <div class="name" id="pName"></div>
+        <div class="role" id="pRole"></div>
+        <div class="bio" id="pBio"></div>
+        <div class="contacts" id="pContacts"></div>
+        <a class="hire-btn" id="pBtn" href="#">Hire me</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="info">
+    <h2 id="hireHeadline"></h2>
+    <a class="resume-btn" id="resumeBtn" href="#">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M5 21h14"/></svg>
+      <span></span>
+    </a>
+    <div class="block"><h3>Project deadlines</h3><div id="deadlines"></div><p class="note" id="deadlineNote"></p></div>
+    <div class="block"><h3>Experience</h3><div id="experience"></div></div>
+    <div class="block"><h3>Education</h3><div id="education"></div></div>
+    <div class="block"><h3>Skills &amp; tools</h3><div class="tags" id="skills"></div></div>
+  </div>
+</section>
+
+<footer id="footer"></footer>
+
+<script>
+/* =====================================================================
+   EDIT EVERYTHING HERE
+   - Text: change any text below.
+   - Images: put your files in an "assets" folder next to this file and
+     write the path, e.g. image: "assets/me.jpg"
+   - Reels: video: "assets/reel1.mp4"  (vertical 9:16 works best)
+   - Leave a path as "" to keep the empty placeholder. Clicking an empty
+     placeholder lets you pick a file to PREVIEW it (not saved on refresh).
+   - All the sample text below is placeholder text. Replace it with yours.
+   ===================================================================== */
+const CONFIG = {
+  name: "Lucky",
+  role: "Video Editor & Content Creator",
+  email: "Lucky24fps@gmail.com",
+  phone: "+91 6375936566",
+  socials: [
+    { label: "Instagram", text: "@Luxcky_AE", url: "https://www.instagram.com/luxcky_ae/" }
+  ],
+
+  /* ---- Section 1: Home ---- */
+  hero: {
+    image: "assets/me.jpeg",   // e.g. "assets/me.jpg"
+    // "b" = bright white words, "d" = dim grey words
+    headline: [
+      { t: "Video editor", c: "b" },
+      { t: " cum content creator crafting reels that ", c: "d" },
+      { t: "hook, hold and convert", c: "b" },
+      { t: ".", c: "d" }
+    ],
+    description: "Hi, I'm Lucky. A video editor and content creator who edits scroll-stopping reels for brands and creators."
+  },
+
+  /* ---- Section 2: Work (add or remove reels freely) ----
+     Long clip (for example 1:30)? You can loop just one part of it by adding start and end in seconds:
+       { title: "Brand Name", video: "assets/reel1.mp4", start: 10, end: 25 }
+     Leave start/end out and the whole video loops. */
+  reels: [
+    { title: "Project 01", video: "assets/reel1.mp4" },
+    { title: "Project 02", video: "assets/reel2.mp4" },
+    { title: "Project 03", video: "assets/reel3.mp4" },
+    { title: "Project 04", video: "assets/reel4.mp4" },
+    { title: "Project 05", video: "assets/reel5.mp4" },
+    { title: "Project 06", video: "assets/reel6.mp4" },
+    { title: "Project 07", video: "assets/reel7.mp4" },
+    { title: "Project 08", video: "assets/reel8.mp4" },
+    { title: "Project 09", video: "assets/reel9.mp4" }
+  ],
+  /* ---- Section 3: Hire me ---- */
+  hire: {
+    photo: "assets/me.jpeg",   // e.g. "assets/lucky.jpg"
+    bio: "I turn raw footage into reels people actually finish watching. Open for freelance and long-term work.",
+    buttonText: "Hire me",
+    // The Hire me button opens a Gmail "new email" page addressed to the email above.
+    // To send people somewhere else instead, put any link here (e.g. a form), or "mailto:you@mail.com" to open their email app.
+    hireLink: "",
+    // Put your resume in the "assets" folder and write its path here, e.g. file: "assets/resume.pdf"
+    resume: { file: "assets/resume.pdf", label: "Download Resume", downloadName: "Lucky-Resume.pdf" },
+    headline: "Let's make something worth watching.",
+    deadlines: [
+      { label: "Short reel (up to 30 sec)",   value: "1 to 2 days" },
+      { label: "Standard reel (30 to 60 sec)", value: "2 to 3 days" },
+      { label: "Long-form / YouTube video",    value: "5 to 7 days" },
+      { label: "Bulk or monthly packages",     value: "Custom timeline" }
+    ],
+    deadlineNote: "Rush delivery is available on request.",
+    experience: [
+      { when: "2024 - Present", title: "Freelance Video Editor & Content Creator", desc: "Editing short-form reels and content for brands and creators." },
+      { when: "2023 - 2024",    title: "Video Editor (Assistant)",                 desc: "Fast-paced short-form editing, trends and storytelling." }
+    ],
+    education: [
+      { when: "2025 - 2028", title: "B.tech , Jaipur Engineering College , Jaipur", desc: "" },
+      { when: "2023",        title: "12th Grade, Dundlod Public School , Dundlod ",                desc: "" }
+    ],
+    skills: ["Premiere Pro", "After Effects", "CapCut", "DaVinci Resolve", "Color grading", "Sound design"]
+  }
+};
+/* ===================== END OF EDIT AREA ===================== */
+
+
+/* ---------- helpers ---------- */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* Shows a clear message on a reel card when its video can't be shown */
+function showVideoProblem(host, mode) {
+  if (host.querySelector('.vproblem')) return;
+  const v = host.querySelector('video'); if (v) v.style.display = 'none';
+  const d = document.createElement('div');
+  d.className = 'ph vproblem';
+  d.innerHTML = '<div class="plus">!</div>' +
+    '<div>' + (mode === 'codec' ? 'Video format not supported' : "Can't play this video") + '</div>' +
+    '<small>' + (mode === 'codec' ? 'Re-export as MP4 (H.264 + AAC)' : 'Check the file name and path, or re-export as MP4 (H.264)') + '</small>';
+  host.prepend(d);
+}
+/* Detects "sound plays but the picture is black" (e.g. H.265/HEVC that the browser can't decode) */
+function watchDecode(host, m) {
+  const id = setInterval(() => {
+    if (!m.isConnected) { clearInterval(id); return; }
+    if (m.paused || m.readyState < 2) return;            // not playing yet (or section is off-screen)
+    clearInterval(id);
+    setTimeout(() => {
+      const q = m.getVideoPlaybackQuality ? m.getVideoPlaybackQuality() : null;
+      if (m.videoWidth === 0 || (q && q.totalVideoFrames === 0 && m.currentTime > 1)) showVideoProblem(host, 'codec');
+    }, 1500);
+  }, 500);
+}
+
+/* Theme toggle (dark <-> off-white light) */
+(function(){
+  const root = document.documentElement, btn = document.getElementById('themeBtn');
+  if (!btn) return;
+  btn.addEventListener('click', function(){
+    const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    root.setAttribute('data-theme', next);
+  });
+})();
+
+/* Owner-only preview picker: visitors can NOT pick files. To test locally, open the page with ?edit at the end of the URL */
+const EDIT_MODE = /[?&]edit\b/.test(location.search);
+
+/* Media slot: shows the file from config, or an empty clickable placeholder */
+function mediaSlot(host, { src, kind, label, hint, start, end }) {
+  host.classList.add('slot');
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = kind === 'video' ? 'video/*' : 'image/*';
+  input.hidden = true;
+  if (EDIT_MODE) { host.appendChild(input); host.classList.add('editable'); }
+
+  function fill(url) {
+    host.querySelectorAll('.media,.ph').forEach(n => n.remove());
+    let m;
+    if (kind === 'video') {
+      m = document.createElement('video');
+      m.muted = true; m.loop = true; m.autoplay = true; m.playsInline = true; m.preload = 'metadata';
+      m.setAttribute('muted', ''); m.setAttribute('playsinline', '');
+      m._start = start || 0; m._end = end || 0;
+      if (m._end) m.loop = false;                 // a trimmed section is looped by hand (see tick)
+      m.src = url;
+      m.addEventListener('loadedmetadata', () => { if (m._start) { try { m.currentTime = m._start; } catch (e) {} } });
+      m.addEventListener('ended', () => { m.currentTime = m._start; m.play().catch(() => {}); });
+      m.addEventListener('error', () => showVideoProblem(host, 'error'));
+      watchDecode(host, m);
+      m.play().catch(() => {});
+    } else {
+      m = document.createElement('img');
+      m.alt = label || '';
+      m.src = url;
+    }
+    m.className = 'media';
+    host.prepend(m);
+    host.classList.add('filled');
+    host.dataset.filled = '1';
+  }
+  function empty() {
+    if (!EDIT_MODE) return;
+    const ph = document.createElement('div');
+    ph.className = 'ph';
+    ph.innerHTML = '<div class="plus">+</div><div>' + esc(label) + '</div>' + (hint ? '<small>' + esc(hint) + '</small>' : '');
+    host.prepend(ph);
+  }
+
+  if (src) fill(src); else empty();
+
+  if (!EDIT_MODE) return;   // visitors: no picker, no replacing images
+  host.addEventListener('click', (e) => {
+    if (e.target === input) return;
+    // reels that already have a video: click is used for play/pause on touch, not replace
+    if (kind === 'video' && host.dataset.filled === '1') return;
+    input.click();
+  });
+  input.addEventListener('change', () => {
+    const f = input.files && input.files[0];
+    if (f) fill(URL.createObjectURL(f));
+  });
+}
+
+/* ---------- 1. Home ---------- */
+$('headline').innerHTML = CONFIG.hero.headline.map(p => '<span class="' + (p.c === 'b' ? 'b' : 'd') + '">' + esc(p.t) + '</span>').join('');
+$('heroDesc').textContent = CONFIG.hero.description;
+mediaSlot($('heroImg'), { src: CONFIG.hero.image, kind: 'image', label: 'Click to add your image', hint: 'Or set hero.image in CONFIG' });
+
+/* ---------- 3. Hire me ---------- */
+const H = CONFIG.hire;
+mediaSlot($('avatar'), { src: H.photo, kind: 'image', label: 'Add photo' });
+$('pName').textContent = CONFIG.name;
+$('pRole').textContent = CONFIG.role;
+$('pBio').textContent = H.bio;
+const contactRows = [
+  { k: 'Email', v: CONFIG.email, href: 'mailto:' + CONFIG.email },
+  { k: 'Phone', v: CONFIG.phone, href: 'tel:' + CONFIG.phone.replace(/\s+/g, '') }
+].concat(CONFIG.socials.map(s => ({ k: s.label, v: s.text, href: s.url })));
+$('pContacts').innerHTML = contactRows.slice(0, 4).map(r =>
+  '<a href="' + esc(r.href) + '" target="_blank" rel="noopener"><span>' + esc(r.k) + '</span><span>' + esc(r.v) + '</span></a>'
+).join('');
+$('pBtn').textContent = H.buttonText;
+const hireSubject = encodeURIComponent('Project inquiry for ' + CONFIG.name);
+$('pBtn').href = H.hireLink || ('https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(CONFIG.email) + '&su=' + hireSubject);
+if (!/^mailto:/i.test($('pBtn').href)) { $('pBtn').target = '_blank'; $('pBtn').rel = 'noopener'; }
+
+$('hireHeadline').textContent = H.headline;
+
+/* Resume button: clicking downloads the file set in CONFIG.hire.resume.file */
+const resumeBtn = $('resumeBtn');
+resumeBtn.querySelector('span').textContent = H.resume.label;
+if (H.resume.file) {
+  resumeBtn.href = H.resume.file;
+  resumeBtn.setAttribute('download', H.resume.downloadName || '');
+} else if (EDIT_MODE) {
+  // no file set yet: clicking lets you pick one so you can test the button
+  const rin = document.createElement('input');
+  rin.type = 'file'; rin.accept = '.pdf,.doc,.docx'; rin.hidden = true;
+  document.body.appendChild(rin);
+  resumeBtn.addEventListener('click', (e) => {
+    if (resumeBtn.dataset.ready === '1') return;
+    e.preventDefault();
+    rin.click();
+  });
+  rin.addEventListener('change', () => {
+    const f = rin.files && rin.files[0];
+    if (!f) return;
+    resumeBtn.href = URL.createObjectURL(f);
+    resumeBtn.setAttribute('download', f.name);
+    resumeBtn.dataset.ready = '1';
+    resumeBtn.click();
+  });
+}
+$('deadlines').innerHTML = H.deadlines.map(d =>
+  '<div class="row"><div class="l">' + esc(d.label) + '</div><div class="r">' + esc(d.value) + '</div></div>').join('');
+$('deadlineNote').textContent = H.deadlineNote || '';
+const expRow = (x) =>
+  '<div class="row exp"><div class="when">' + esc(x.when) + '</div><div><div class="what">' + esc(x.title) + '</div>' +
+  (x.desc ? '<div class="desc">' + esc(x.desc) + '</div>' : '') + '</div></div>';
+$('experience').innerHTML = H.experience.map(expRow).join('');
+$('education').innerHTML = H.education.map(expRow).join('');
+$('skills').innerHTML = H.skills.map(s => '<span class="tag">' + esc(s) + '</span>').join('');
+$('footer').textContent = '\u00A9 ' + new Date().getFullYear() + ' ' + CONFIG.name + '. All rights reserved.';
+
+/* ---------- 2. Work: orbiting reels ---------- */
+const stage = $('stage');
+const cards = [];
+let active = null;     // card currently hovered / pinned
+let pinned = null;     // touch devices: tapped card
+
+function setActive(card) { active = card; }   // hover only changes which card is audible and enlarged
+
+CONFIG.reels.forEach((r) => {
+  const card = document.createElement('div');
+  card.className = 'reel';
+  const slot = document.createElement('div');
+  card.appendChild(slot);
+  mediaSlot(slot, { src: r.video, kind: 'video', label: 'Add reel', hint: '9:16', start: r.start, end: r.end });
+  const lab = document.createElement('div');
+  lab.className = 'reel-label';
+  lab.textContent = r.title;
+  card.appendChild(lab);
+  stage.appendChild(card);
+  cards.push(card);
+
+  card.addEventListener('mouseenter', () => { if (!pinned) setActive(card); });
+  card.addEventListener('mouseleave', () => { if (!pinned) setActive(null); });
+  card.addEventListener('click', () => {
+    if (!window.matchMedia('(hover: none)').matches) return;
+    if (pinned === card) { pinned = null; setActive(null); }
+    else { pinned = card; setActive(card); }
+  });
+});
+
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let t = 0, speed = 1, running = false, last = 0;
+let T = 0;                                    // free-running clock for the floating motion
+const wob = reduceMotion ? 0 : 1;             // 0 = no wiggle (reduced motion)
+const big = stage.querySelector('.big');
+const bigLines = big.querySelectorAll('span');
+
+// ---- sound: only the card at the bottom of the orbit is audible; a hovered card overrides everyone ----
+const soundBtn = $('soundBtn');
+let soundOn = false, gestureSeen = false;       // browsers only allow sound after a click or key press
+function paintSoundBtn() {
+  soundBtn.classList.toggle('on', soundOn);
+  soundBtn.querySelector('span').textContent = !gestureSeen ? 'Click to enable sound' : (soundOn ? 'Sound on' : 'Sound off');
+}
+soundBtn.addEventListener('click', () => { gestureSeen = true; soundOn = !soundOn; paintSoundBtn(); });
+document.addEventListener('click', () => { if (!gestureSeen) { gestureSeen = true; soundOn = true; paintSoundBtn(); } });
+document.addEventListener('keydown', () => { if (!gestureSeen) { gestureSeen = true; soundOn = true; paintSoundBtn(); } });
+paintSoundBtn();
+function setAllPlaying(on) {
+  stage.querySelectorAll('video').forEach(v => { if (on) v.play().catch(() => {}); else v.pause(); });
+}
+
+// each card gets its own random-looking (but fixed) wiggle settings
+const rnd = (i, n) => { const v = Math.sin(i * 12.9898 + n * 78.233) * 43758.5453; return v - Math.floor(v); };
+const P = cards.map((_, i) => ({
+  p1: rnd(i, 1) * 6.283, p2: rnd(i, 2) * 6.283, p3: rnd(i, 3) * 6.283, p4: rnd(i, 4) * 6.283,
+  f1: 0.7 + rnd(i, 5) * 0.6, f2: 0.8 + rnd(i, 6) * 0.6, f3: 0.6 + rnd(i, 7) * 0.6,
+  ax: 0.05 + 0.05 * rnd(i, 8), ay: 0.07 + 0.06 * rnd(i, 9), ar: 2.5 + 3 * rnd(i, 10)
+}));
+
+function layout(dt) {
+  dt = dt || 0;
+  const W = stage.clientWidth, Hh = stage.clientHeight;
+  const cw = Math.max(104, Math.min(220, W * 0.15));
+  const Rx = W * 0.40, Ry = Hh * 0.30;
+  const tilt = -8 * Math.PI / 180;
+  const N = cards.length || 1;
+  cards.forEach((c, i) => {
+    const p = P[i];
+
+    // hover amount eases toward 1 (hovered) or 0 (not), then is smoothed again
+    const goal = c === active ? 1 : 0;
+    let h = c._h || 0;
+    h += (goal - h) * (1 - Math.exp(-dt * 6));
+    if (Math.abs(goal - h) < 0.001) h = goal;
+    c._h = h;
+    const e = h * h * (3 - 2 * h);               // smoothstep
+    const w = wob * (1 - e);                     // wiggle calms down while hovered
+
+    // audio level: the card at the bottom of the orbit is loudest and fades as it leaves;
+    // the next card fades in. Hovering a card silences all the others.
+    const ab = t + (i / N) * Math.PI * 2;
+    let df = (ab - Math.PI / 2) % (Math.PI * 2);
+    if (df > Math.PI) df -= Math.PI * 2;
+    if (df < -Math.PI) df += Math.PI * 2;
+    const gap = Math.PI * 2 / N;
+    let tv = Math.abs(df) < gap ? Math.cos(Math.abs(df) / gap * Math.PI / 2) : 0;
+    if (active) tv = c === active ? 1 : 0;
+    if (!soundOn) tv = 0;
+    c._v = (c._v || 0) + (tv - (c._v || 0)) * (1 - Math.exp(-dt * 4.5));   // eased fade
+    const vid = c.querySelector('video');
+    if (vid) {
+      const vol = Math.min(1, Math.max(0, c._v * c._v));
+      vid.volume = vol;
+      const wantMuted = vol < 0.003;
+      if (vid.muted !== wantMuted) vid.muted = wantMuted;
+    }
+
+    // orbit position, with a little drift in speed and radius so it never feels like a gear
+    const a = t + (i / N) * Math.PI * 2 + w * 0.07 * Math.sin(T * 0.45 + p.p4);
+    const rf = 1 + w * 0.06 * Math.sin(T * 0.55 + p.p1);
+    const d = Math.sin(a);                       // depth: +1 front, -1 back
+    const x = Math.cos(a) * Rx * rf, y = d * Ry * rf;
+    const xr = x * Math.cos(tilt) - y * Math.sin(tilt);
+    const yr = x * Math.sin(tilt) + y * Math.cos(tilt);
+    const k = (d + 1) / 2;
+
+    // floating: each card drifts, tilts and breathes on its own rhythm
+    const fx = w * cw * p.ax * (Math.sin(T * p.f1 + p.p1) + 0.5 * Math.sin(T * p.f1 * 0.53 + p.p2));
+    const fy = w * cw * p.ay * (Math.sin(T * p.f2 + p.p2) + 0.5 * Math.sin(T * p.f2 * 0.47 + p.p3));
+    const wr = w * p.ar * Math.sin(T * p.f3 + p.p3);
+    const sway = w * 6 * Math.sin(T * p.f1 * 0.7 + p.p2);
+    const br = 1 + w * 0.03 * Math.sin(T * p.f2 * 0.8 + p.p4);
+
+    const baseS = 0.62 + 0.38 * k;
+    const s = (baseS + (1.32 - baseS) * e) * br; // grows to a larger size on hover
+    const ry = -Math.cos(a) * 32 * (1 - e) + sway;   // straightens out on hover
+    const rz = Math.cos(a) * 5 * (1 - e) + wr;
+    const baseO = 0.4 + 0.6 * k;
+    const baseB = 0.55 + 0.45 * k;
+
+    c.style.width = cw + 'px';
+    c.style.borderRadius = (14 + 8 * e).toFixed(1) + 'px';   // shape morph
+    c.style.boxShadow = '0 ' + (22 + 22 * e).toFixed(0) + 'px ' + (50 + 30 * e).toFixed(0) + 'px rgba(0,0,0,' + (0.55 + 0.15 * e).toFixed(2) + ')';
+    c.style.transform =
+      'translate(-50%,-50%) translate(' + (xr + fx).toFixed(1) + 'px,' + (yr + fy).toFixed(1) + 'px) ' +
+      'perspective(800px) rotateY(' + ry.toFixed(2) + 'deg) ' +
+      'rotateZ(' + rz.toFixed(2) + 'deg) scale(' + s.toFixed(4) + ')';
+    c.style.opacity = (baseO + (1 - baseO) * e).toFixed(3);
+    c.style.filter = 'brightness(' + (baseB + (1 - baseB) * e).toFixed(3) + ')';
+    c.style.zIndex = h > 0.01 ? 900 : (d > 0 ? 600 + Math.round(d * 100) : 100 + Math.round((d + 1) * 100));
+  });
+}
+
+// the big sentence floats gently in place; each line drifts a little differently
+function floatHeading() {
+  if (!wob) return;
+  const x = Math.sin(T * 0.50) * 8 + Math.sin(T * 0.31 + 1.0) * 5;
+  const y = Math.sin(T * 0.62 + 0.5) * 10 + Math.sin(T * 0.37 + 2.0) * 5;
+  const r = Math.sin(T * 0.43 + 0.8) * 0.7;
+  big.style.transform = 'translate(-50%,-50%) translate(' + x.toFixed(2) + 'px,' + y.toFixed(2) + 'px) rotate(' + r.toFixed(3) + 'deg)';
+  bigLines.forEach((ln, i) => {
+    ln.style.transform = 'translate(' + (Math.sin(T * 0.7 + i * 1.1) * 5).toFixed(2) + 'px,' + (Math.sin(T * 0.9 + i * 0.8) * 4).toFixed(2) + 'px)';
+  });
+}
+
+function tick(now) {
+  if (!running) return;
+  const dt = Math.min(50, now - last) / 1000;
+  last = now;
+  T += dt;
+  const target = active ? 0 : 1;
+  speed += (target - speed) * (1 - Math.exp(-dt * 5));
+  if (!reduceMotion) t += dt * speed * (Math.PI * 2 / 70);   // one full orbit in about 70 seconds
+  layout(dt);
+  floatHeading();
+  // trimmed loops: when a reel has start/end set, jump back to start at the end point
+  cards.forEach(c => {
+    const v = c._vid || (c._vid = c.querySelector('video'));
+    if (v && v._end && v.currentTime >= v._end) v.currentTime = v._start;
+  });
+  requestAnimationFrame(tick);
+}
+
+layout(0);
+window.addEventListener('resize', () => layout(0));
+new IntersectionObserver((entries) => {
+  entries.forEach(en => {
+    if (en.isIntersecting && !running) { running = true; last = performance.now(); requestAnimationFrame(tick); setAllPlaying(true); }
+    else if (!en.isIntersecting) { running = false; setAllPlaying(false); }   // off-screen: pause (saves battery, no stray audio)
+  });
+}, { threshold: 0.05 }).observe(stage);
+
+/* ---------- Work: small glowing twinkling stars (visible only in dark theme) ---------- */
+(function(){
+  const cv = document.createElement('canvas');
+  cv.className = 'stars';
+  cv.setAttribute('aria-hidden', 'true');
+  stage.insertBefore(cv, stage.firstChild);          // sits behind text + reels
+  const ctx = cv.getContext('2d');
+  const root = document.documentElement;
+  const COUNT = 3;                                    // stars visible at one time
+  let W = 0, H = 0, dpr = 1, stars = [], visible = false, raf = 0, lastT = 0;
+
+  function make(initial) {
+    const ang = Math.random() * Math.PI * 2;          // random direction
+    const speed = 14 + Math.random() * 46;            // px per second
+    return {
+      x: Math.random() * W, y: Math.random() * H,
+      vx: Math.cos(ang) * speed, vy: Math.sin(ang) * speed,
+      r: 0.7 + Math.random() * 1.3,                   // tiny core size
+      tail: 10 + Math.random() * 26,                  // short shooting trail
+      ph: Math.random() * Math.PI * 2,                // twinkle phase
+      tw: 1.5 + Math.random() * 3,                    // twinkle speed
+      hue: Math.random() < .25 ? 205 : (Math.random() < .3 ? 45 : 0),  // mostly white, some icy blue / warm
+      turn: (Math.random() - .5) * 0.5,               // slow drift in direction
+      life: 4 + Math.random() * 4,                    // seconds on screen
+      age: initial ? Math.random() * 4 : 0            // fades in, drifts, fades out, then respawns elsewhere
+    };
+  }
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = stage.clientWidth; H = stage.clientHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (!stars.length) for (let i = 0; i < COUNT; i++) stars.push(make(true));
+  }
+  function color(s, a) {
+    return s.hue === 0 ? 'rgba(255,255,255,' + a + ')' : 'hsla(' + s.hue + ',100%,85%,' + a + ')';
+  }
+  function frame(t) {
+    raf = 0;
+    if (!visible) return;
+    const dt = Math.min((t - lastT) / 1000, 0.05); lastT = t;
+    const isDark = root.getAttribute('data-theme') !== 'light';
+    ctx.clearRect(0, 0, W, H);
+    if (isDark) {
+      ctx.globalCompositeOperation = 'lighter';
+      for (const s of stars) {
+        // gently curve the direction so they wander around the frame
+        const c = Math.cos(s.turn * dt), sn = Math.sin(s.turn * dt);
+        const vx = s.vx * c - s.vy * sn, vy = s.vx * sn + s.vy * c;
+        s.vx = vx; s.vy = vy;
+        s.x += s.vx * dt; s.y += s.vy * dt;
+        s.age += dt;
+        if (s.age >= s.life) { Object.assign(s, make(false)); continue; }   // respawn at a new spot/direction
+        const env = Math.sin(Math.PI * s.age / s.life);                      // 0 -> 1 -> 0 fade in/out
+
+        const tw = 0.5 + 0.5 * Math.sin(t / 1000 * s.tw + s.ph);       // 0..1 twinkle
+        const a = (0.25 + 0.75 * tw) * env;
+        const sp = Math.hypot(s.vx, s.vy) || 1;
+        const tx = s.x - (s.vx / sp) * s.tail, ty = s.y - (s.vy / sp) * s.tail;
+
+        // fading tail
+        const g = ctx.createLinearGradient(s.x, s.y, tx, ty);
+        g.addColorStop(0, color(s, a * 0.8));
+        g.addColorStop(1, color(s, 0));
+        ctx.strokeStyle = g; ctx.lineWidth = s.r * 0.9; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(tx, ty); ctx.stroke();
+
+        // glow
+        const gr = s.r * 6;
+        const rg = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, gr);
+        rg.addColorStop(0, color(s, a * 0.55));
+        rg.addColorStop(1, color(s, 0));
+        ctx.fillStyle = rg;
+        ctx.beginPath(); ctx.arc(s.x, s.y, gr, 0, 6.2832); ctx.fill();
+
+        // bright core
+        ctx.fillStyle = color(s, Math.min(1, a + 0.2));
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 6.2832); ctx.fill();
+      }
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    raf = requestAnimationFrame(frame);
+  }
+  function start() { if (!raf && visible) { lastT = performance.now(); raf = requestAnimationFrame(frame); } }
+
+  resize();
+  window.addEventListener('resize', resize);
+  // only animate while the Work section is on screen (saves battery)
+  new IntersectionObserver((e) => { visible = e[0].isIntersecting; if (visible) start(); }, { threshold: 0.02 }).observe(stage);
+})();
+
+/* ---------- Header: highlight the section in view ---------- */
+const links = document.querySelectorAll('header a[data-sec]');
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(en => {
+    if (en.isIntersecting) {
+      links.forEach(a => a.classList.toggle('active', a.dataset.sec === en.target.id));
+    }
+  });
+}, { rootMargin: '-45% 0px -50% 0px' });
+['home', 'work', 'hire'].forEach(id => io.observe($(id)));
+</script>
+</body>
+</html>
